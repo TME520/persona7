@@ -1,0 +1,33 @@
+#!/bin/bash
+
+echo 'Setting environment variables:'
+echo -e '\t- Persona/7 instance identification'
+export NAME=''
+export NICKNAME=''
+
+echo -e '\t- Credentials'
+export SLACK_BOT_TOKEN=''
+export SLACKTOKEN=''
+
+echo -e '\t- Parameters...'
+export DYNAMODBURL='http://localhost:8001'
+export CB1DATAFOLDER='./persona7_data/'
+export DASHBOARDFILENAME='p7.html'
+export DASHBOARDSBASEURL='https://yourwebserver.com'
+export AZDEVOPSURL='https://dev.azure.com'
+export LOGSFOLDER='./log/'
+export LOGFILENAME='persona7_default.log'
+export CONFIGFILE='sample_config'
+
+echo -e '\t- Preferences...'
+# 0 = OFF
+# 1 = ON
+export ENABLEBSTICK=0
+export ENABLESLACK=0
+export ENABLESUMO=0
+export ENABLEDASHBOARD=0
+
+echo 'Starting Persona/7 instance '$NAME' ($NICKNAME)'
+python3 ./persona7.py
+
+exit 0
