@@ -4,7 +4,8 @@ import re
 import urllib.request
 import urllib.parse
 import json
-from slackclient import SlackClient
+from slack import RTMClient
+from slack.errors import SlackApiError
 import traceback
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -26,7 +27,7 @@ publicname='Persona/7'
 version='0.10'
 
 # instantiate Slack client
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
+slack_client = RTMClient(token=os.environ.get('SLACKTOKEN'))
 
 # starterbot's user ID in Slack: value is assigned after the bot starts up
 chatbotone_id = None
@@ -259,29 +260,35 @@ def handle_command(command, channel):
     publishToSlack(response or default_response, channel, ':coc1:', slack_client)
 
 if __name__ == '__main__':
-    if slack_client.rtm_connect(with_team_state=False, auto_reconnect=True):
-        print(Fore.RED + '#############################')
-        print(Fore.RED + '#        Persona/7 M1       #')
-        print(Fore.RED + '#############################')
-        print(Fore.GREEN + f'\n\nVersion {version} connected and running !\nREADY>')
-        # Read bot's user ID by calling Web API method `auth.test`
-        chatbotone_id = slack_client.api_call('auth.test')['user_id']
-        # print('Chatbotone_id: ' + str(chatbotone_id))
-        while True:
-            try:
-                command, channel = parse_bot_commands(slack_client.rtm_read())
-            except Exception as e:
-                print(Fore.RED + '[ERROR] Failed to connect to Slack\n', e)
-                traceback.print_exc()
-                pass
-                try:
-                    print(Fore.RED + '[ERROR] Damn Slack')
-                except Exception as f:
-                    print(Fore.RED + '[ERROR] Damn damn\n', f)
-                    pass
-                time.sleep(4)
-            if command:
-                handle_command(command, channel)
-            time.sleep(RTM_READ_DELAY)
-    else:
-        print(Fore.RED + '[ERROR] Connection failed. Exception traceback printed above.')
+    print(Fore.RED + '#############################')
+    print(Fore.RED + '#        Persona/7 M1       #')
+    print(Fore.RED + '#############################')
+    print(Fore.GREEN + f'\n\nVersion {version} connected and running !\nREADY>')
+
+
+@RTMClient.run_on(event='message')
+def say_hello(**payload):
+    data = payload['data']
+    web_client = payload['web_client']
+    rtm_client = payload['rtm_client']
+    if 'text' in data:
+        channel_id = data['channel']
+        thread_ts = data['ts']
+        user = data['user']
+        if 'Hello' in data.get('text', []):
+            msg_to_post = f"Hi <@{user}>!"
+        try:
+            response = web_client.chat_postMessage(
+                channel=channel_id,
+                text=msg_to_post,
+                thread_ts=thread_ts
+            )
+            # handle_command(command, channel)
+        except SlackApiError as e:
+            # You will get a SlackApiError if "ok" is False
+            assert e.response["ok"] is False
+            assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+            print(f"Got an error: {e.response['error']}")
+
+rtm_client = RTMClient(token=os.environ["SLACKTOKEN"])
+rtm_client.start()
