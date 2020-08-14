@@ -6,7 +6,7 @@ export NAME=''
 export NICKNAME=''
 
 echo -e '\t- Credentials'
-export SLACKTOKEN=''
+export SLACKTOKEN='SED001'
 
 echo -e '\t- Parameters...'
 export DYNAMODBURL='http://localhost:8001'
