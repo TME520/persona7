@@ -6,7 +6,7 @@ Research, ideas, experiments, anything that could help make Persona/7 better.
 
 1. Get input
 2. Clean input
-3. Decode input
+3. Decode input: Check if sentence matches ready-made template & Run sentence analysis in parallel.
 4. Contextualize input
 5. Prepare answer
 6. Post answer
