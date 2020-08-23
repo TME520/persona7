@@ -33,6 +33,20 @@ Research, ideas, experiments, anything that could help make Persona/7 better.
 - Computers,
 - Phones.
 
+## Conversation elements
+
+- Facts,
+- Current nrews,
+- Past news,
+- Current mainstream,
+- Past mainstream,
+- Family,
+- Work,
+- Passions, interests,
+- Current & past focus.
+
 ## Key concepts
 
-### Contexts
+### Context
+
+### Focus
