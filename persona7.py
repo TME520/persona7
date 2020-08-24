@@ -22,7 +22,7 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-publicname='Persona/7'
+publicname='Persona/7 M2'
 version='0.11'
 
 # instantiate Slack client
@@ -67,38 +67,6 @@ def cleanupIncDesc(pathToCB1File):
     currentCB1File.close()
     print('Cleaned up description:\n')
     print(str(wordsFiltered))
-
-def publishToSlack(msg, chan, icon, creds):
-    try:
-        print(Fore.LIGHTGREEN_EX + 'publishToSlack')
-        slackCallbackId=''
-        slackColor='#3AA3E3'
-        slackActionName=''
-        slackActionText=''
-        slackActionType=''
-        slackActionValue=''
-        creds.api_call(
-            'chat.postMessage',
-            channel=chan,
-            text=msg,
-            icon_emoji=icon,
-            as_user='true',
-            attachments=[{
-                'text': '',
-                'callback_id': slackCallbackId + 'autoassign_feedback',
-                'color': slackColor,
-                'attachment_type': 'default',
-                'actions': [{
-                'name': slackActionName,
-                'text': slackActionText,
-                'type': slackActionType,
-                'value': slackActionValue
-                }]
-            }]
-        )
-    except Exception as e:
-        print(Fore.RED + '[ERROR] A problem occured while publishing on Slack.', e)
-        pass
 
 def callURL(url2call, creds):
     try:
@@ -167,32 +135,7 @@ def writeDataToFile(targetFile,dataToWrite,successMsg,failureMsg):
     newCB1File.close()
     print(successMsg)
 
-def parse_bot_commands(slack_events):
-    # print(Fore.LIGHTGREEN_EX + 'parse_bot_commands')
-    """
-        Parses a list of events coming from the Slack RTM API to find bot commands.
-        If a bot command is found, this function returns a tuple of command and channel.
-        If its not found, then this function returns None, None.
-    """
-    for event in slack_events:
-        if event['type'] == 'message' and not 'subtype' in event:
-            # Expecting CB1 name at the beginning of the message
-            user_id, message = parse_direct_mention(event['text'])
-            if user_id == chatbotone_id:
-                return message, event['user']   
-    return None, None
-
-def parse_direct_mention(message_text):
-    print(Fore.LIGHTGREEN_EX + 'parse_direct_mention')
-    """
-        Finds a direct mention (a mention that is at the beginning) in message text
-        and returns the user ID which was mentioned. If there is no direct mention, returns None
-    """
-    matches = re.search(MENTION_REGEX, message_text)
-    # the first group contains the username, the second group contains the remaining message
-    return (matches.group(1), matches.group(2).strip()) if matches else (None, None)
-
-def handle_command(command, channel):
+def handle_command(command, channel, ts, user):
     print(Fore.LIGHTGREEN_EX + 'handle_command')
     """
         Executes bot command if the command is known
@@ -202,19 +145,6 @@ def handle_command(command, channel):
 
     # Finds and executes the given command, filling in response
     response = None
-
-    global snowBase64
-    global snowURL
-    global yestIncQuery
-    global freshIncQuery
-    global recentIncQuery
-    global oldIncQuery
-    global pickIncQuery
-    global statsIncQuery
-    global statsChgQuery
-    global statsReqQuery
-    global p1AlertsQuery
-    global p2AlertsQuery
 
     # Check if we are waiting for a specific answer from user
     for key in eventsList:
@@ -255,6 +185,7 @@ def handle_command(command, channel):
     if command.startswith(EXAMPLE_COMMAND):
         response = 'Sure...write some more code then I can do that!'
     elif command == 'help':
+        print('\n\n---> help\n')
         response = "*Available commands*\n\n"
         response = response + "- `[ fresh | recent | yest | old ] inc`: SNow incidents opened [ today | last 7 days | yesterday | last 3 months ],\n"
         response = response + "- `p1` or `p2`: List P1/P2 alerts currently active,\n"
@@ -277,13 +208,16 @@ def handle_command(command, channel):
         response = response + '*PIZZA*: 0123 456 789\n'
         response = response + '*GHOSTBUSTAZ*: 0123 456 789\n'
         response = response + '\n> https://example.jira.com/wiki/spaces/DBMW/pages/0123456789/The+Big+What+To+Do+Page#TheBigWhatToDoPage-...Ineedtocontactadepartment/service'
+    elif 'Hello' in command:
+        print('\n\n---> Hello\n')
+        response = f'Hi <@{user}>!\n'
 
     # Sends the response back to the channel
-    publishToSlack(response or default_response, channel, ':coc1:', slack_client)
+    return response or default_response
 
 if __name__ == '__main__':
     print(Fore.RED + '#############################')
-    print(Fore.RED + '#        Persona/7 M1       #')
+    print(Fore.RED + '#        Persona/7 M2       #')
     print(Fore.RED + '#############################')
     print(Fore.GREEN + f'\n\nVersion {version} connected and running !\nREADY>')
 
@@ -294,18 +228,18 @@ def say_hello(**payload):
     web_client = payload['web_client']
     rtm_client = payload['rtm_client']
     if 'text' in data:
+        command = data.get('text', [])
         channel_id = data['channel']
         thread_ts = data['ts']
         user = data['user']
-        if 'Hello' in data.get('text', []):
-            msg_to_post = f"Hi <@{user}>!"
+        msg_to_post = handle_command(command, channel_id, thread_ts, user)
         try:
             response = web_client.chat_postMessage(
                 channel=channel_id,
                 text=msg_to_post,
                 thread_ts=thread_ts
             )
-            # handle_command(command, channel)
+            print(f'Slack response: {response}')
         except SlackApiError as e:
             # You will get a SlackApiError if "ok" is False
             assert e.response["ok"] is False
