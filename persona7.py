@@ -128,15 +128,24 @@ def initEventsTree(userId, eventsTreeName, eventsList):
         eventsList['bilbo_leave'] = {'ts': 0, 'expires': 0, 'text': 'The sky is cloudy and you feel a few drops falling on your arms and head.\n*This very short game ends here.*', 'option1': None, 'action1': None, 'option2': None, 'action2': None, 'option3': None, 'action3': None, 'url': None, 'eventId': None, 'callFunction': None, 'step': 'ping'}
     return eventsList
 
-def writeDataToFile(targetFile,dataToWrite,successMsg,failureMsg):
+def writeDataToFile(targetFile, dataToWrite, successMsg, failureMsg, mode):
     print(Fore.LIGHTGREEN_EX + 'writeDataToFile')
-    newCB1File = open(targetFile,'w')
-    newCB1File.write(dataToWrite)
-    newCB1File.close()
-    print(successMsg)
+    try:
+        if mode == 'overwrite':
+            newCB1File = open(targetFile,'w+')
+        elif mode == 'append':
+            newCB1File = open(targetFile,'a')
+        newCB1File.write(dataToWrite)
+        newCB1File.close()
+        print(successMsg)
+    except Exception as e:
+        print(failureMsg, e)
+        traceback.print_exc()
+        pass
 
 def handle_command(command, channel, ts, user):
     print(Fore.LIGHTGREEN_EX + 'handle_command')
+    print(f'command: {command}, channel: {channel}, ts: {ts}, user: {user}')
     """
         Executes bot command if the command is known
     """
@@ -145,6 +154,14 @@ def handle_command(command, channel, ts, user):
 
     # Finds and executes the given command, filling in response
     response = None
+
+    # Create a directory for user if required
+    if not os.path.exists(f'{cb1DataFolder}{user}'):
+        os.makedirs(f'{cb1DataFolder}{user}')
+        print(f'Folder created: {cb1DataFolder}{user}')
+    
+    # Log user action
+    writeDataToFile(f'{cb1DataFolder}{user}/commands.log', f'User entered command: {command}', 'Event log - OK', 'Event log - KO', 'append')
 
     # Check if we are waiting for a specific answer from user
     for key in eventsList:
