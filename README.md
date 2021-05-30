@@ -5,7 +5,7 @@ An Open Source personal assistant
 
 Pretending to do better than these (mostly) big corporations with their big money and their armies of big brains would be perfectly ridiculous: I am no genius myself and my resources are very limited. This repository is simply there because I need a place to experiment; I don't expect to achieve anything ground breaking.
 
-*Persona/7* is my humble attempt at transforming virtual assistants into *personal* assistants, always looking after you, always having your well being and best interest in mind. You can see *Persona/7* as a guardian angel with silicon wings.
+*Persona/7* is my humble attempt at transforming virtual assistants into *personal* assistants, always looking after you, always having your wellbeing and best interest in mind. You can see *Persona/7* as a guardian angel with silicon wings.
 ## We already have tons of these
 True, I'm well aware of that fact. As said in the previous section, this project is simply there for me to experiment, see what I can do in the field of virtual assistants.
 There is no ego behind this, it's not a vanity project, simply curiosity and a taste for trying things.
