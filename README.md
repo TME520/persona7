@@ -22,3 +22,8 @@ Milestone 1 is very likely to be a Slack bot. I can't see further than that and 
 ### Warnings
 ## Requirements
 ### Google account
+- Mailbox with p7 subfolder
+- Calendar
+### GPS receptor
+- For position & weather
+- POI suggestions
