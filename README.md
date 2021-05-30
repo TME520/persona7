@@ -12,7 +12,9 @@ There is no ego behind this, it's not a vanity project, simply curiosity and a t
 ## What would it look like ?
 Milestone 1 is very likely to be a Slack bot. I can't see further than that and I would be the happiest man on Earth if *Persona/7* got that far.
 ## Features
-### Reminders
+### Local weather
+### Mailbox monitoring (GMail)
+### Reminders (Google Calendar)
 - Public holidays
 - Days off work
 - Saints
