@@ -1,5 +1,5 @@
 # Persona/7
-An Open Source AI persona engine.
+An Open Source personal assistant
 ## A guardian angel with silicon wings
 [Apple Siri](https://en.wikipedia.org/wiki/Siri), [Gatebox Hazuma Hikari](https://www.gatebox.ai/en/), [Microsoft Cortana](https://en.wikipedia.org/wiki/Cortana), [Samsung Bixby](https://en.wikipedia.org/wiki/Bixby_(virtual_assistant)) and [Google Assistant](https://en.wikipedia.org/wiki/Google_Assistant) are fairly advanced products with an impressive range of features, but interacting with them is never totally satisfying. This is due to the fact they have a limited grasp of the human social space, making their interactions pretty shallow most of the time. Users are never sure of what they can ask and tend to stick to basic questions, renouncing to hold any meaningful conversation with their virtual assistants.
 
@@ -11,3 +11,14 @@ True, I'm well aware of that fact. As said in the previous section, this project
 There is no ego behind this, it's not a vanity project, simply curiosity and a taste for trying things.
 ## What would it look like ?
 Milestone 1 is very likely to be a Slack bot. I can't see further than that and I would be the happiest man on Earth if *Persona/7* got that far.
+## Features
+### Reminders
+- Public holidays
+- Days off work
+- Saints
+- Birthdays
+- Events scheduled in calendar: meetings, appointments...
+### Suggestions
+### Warnings
+## Requirements
+### Google account
