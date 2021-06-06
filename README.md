@@ -10,7 +10,7 @@ Pretending to do better than these (mostly) big corporations with their big mone
 True, I'm well aware of that fact. As said in the previous section, this project is simply there for me to experiment, see what I can do in the field of virtual assistants.
 There is no ego behind this, it's not a vanity project, simply curiosity and a taste for trying things.
 ## What would it look like ?
-Milestone 1 is very likely to be a Slack bot. I can't see further than that and I would be the happiest man on Earth if *Persona/7* got that far.
+Milestone 1 is very likely to be a Slack bot (or maybe Teams). I can't see further than that and I would be the happiest man on Earth if *Persona/7* got that far.
 ## Features
 ### Local weather
 ### Mailbox monitoring (GMail)
