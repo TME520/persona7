@@ -1,11 +1,11 @@
 import os
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
 import time
 import re
 import urllib.request
 import urllib.parse
 import json
+from slack import RTMClient
+from slack.errors import SlackApiError
 import traceback
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -22,43 +22,25 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-publicname='Persona/7 M3'
-version='0.12'
+publicname='Persona/7 M2'
+version='0.11'
 
-# Initializes your app with your bot token and socket mode handler
-app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
+# instantiate Slack client
+slack_client = RTMClient(token=os.environ.get('SLACKTOKEN'))
 
 # starterbot's user ID in Slack: value is assigned after the bot starts up
 chatbotone_id = None
 eventsList = {}
-
-# Constants
-EXAMPLE_COMMAND = 'do'
 
 # Path to data folder (contains ML stuff)
 cb1DataFolder = os.environ.get('CB1DATAFOLDER')
 if not os.path.exists(cb1DataFolder):
     os.makedirs(cb1DataFolder)
 
-# Listens to incoming messages that contain "hello"
-# To learn available listener arguments,
-# visit https://slack.dev/bolt-python/api-docs/slack_bolt/kwargs_injection/args.html
-@app.message("hello")
-def message_hello(message, say):
-    # say() sends a message to the channel where the event was triggered
-    say(f"Hey there <@{message['user']}>!")
-
-@app.message("debug")
-def message_help(message, say):
-    print(f"{message.values()}")
-    say(f"Debug info: <{message['user']}> - <{message['channel']}> - <{message['ts']}> - <{message['text']}>")
-
-@app.event("message")
-def reply_to_message(message, say):
-    print(f"{message.values()}")
-    print(f"{dict(message)}")
-    print(f"{message['blocks']}")
-    say(f"{handle_command(message['text'], message['channel'], message['ts'], message['user'])}")
+# constants
+RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
+EXAMPLE_COMMAND = 'do'
+MENTION_REGEX = '^<@(|[WU].+?)>(.*)'
 
 def cleanupIncDesc(pathToCB1File):
     print(Fore.LIGHTGREEN_EX + 'cleanupIncDesc')
@@ -250,10 +232,37 @@ def handle_command(command, channel, ts, user):
     # Sends the response back to the channel
     return response or default_response
 
-# Start your app
-if __name__ == "__main__":
-    SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
+if __name__ == '__main__':
     print(Fore.RED + '#############################')
-    print(Fore.RED + '#        Persona/7 M3       #')
+    print(Fore.RED + '#        Persona/7 M2       #')
     print(Fore.RED + '#############################')
     print(Fore.GREEN + f'\n\nVersion {version} connected and running !\nREADY>')
+
+
+@RTMClient.run_on(event='message')
+def say_hello(**payload):
+    print('-= Event =-')
+    data = payload['data']
+    web_client = payload['web_client']
+    rtm_client = payload['rtm_client']
+    if 'text' in data:
+        command = data.get('text', [])
+        channel_id = data['channel']
+        thread_ts = data['ts']
+        user = data['user']
+        msg_to_post = handle_command(command, channel_id, thread_ts, user)
+        try:
+            response = web_client.chat_postMessage(
+                channel=channel_id,
+                text=msg_to_post,
+                thread_ts=thread_ts
+            )
+            print(f'Slack response: {response}')
+        except SlackApiError as e:
+            # You will get a SlackApiError if "ok" is False
+            assert e.response["ok"] is False
+            assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+            print(f"Got an error: {e.response['error']}")
+
+rtm_client = RTMClient(token=os.environ["SLACKTOKEN"])
+rtm_client.start()
