@@ -241,6 +241,7 @@ if __name__ == '__main__':
 
 @RTMClient.run_on(event='message')
 def say_hello(**payload):
+    print('-= Event =-')
     data = payload['data']
     web_client = payload['web_client']
     rtm_client = payload['rtm_client']
