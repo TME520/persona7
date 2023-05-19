@@ -15,6 +15,7 @@ from joblib import load
 from argparse import ArgumentParser
 import boto3
 from colorama import Fore, Style, init
+import random
 
 init(autoreset=True)
 
@@ -23,7 +24,7 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 
 publicname='Persona/7 M3'
-version='0.12'
+version='0.13'
 
 # Initializes your app with your bot token and socket mode handler
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
@@ -31,6 +32,9 @@ app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 # starterbot's user ID in Slack: value is assigned after the bot starts up
 chatbotone_id = None
 eventsList = {}
+
+# Variables
+dadJokes = ['What does a baby computer call his father? Data.', 'I only seem to get sick on weekdays. I must have a weekend immune system', 'Which days are the strongest? Saturday and Sunday. The rest are weekdays.', 'Have you heard about the restaurant on the moon? Great food, no atmosphere.', 'What did Yoda say when he saw himself in 4K? HDMI.', 'How many tickles does it take to make an octopus laugh? Ten tickles.', 'That car looks nice but the muffler seems exhausted.', 'I used to play piano by ear. Now I use my hands.', 'What did the vet say to the cat? How are you feline?', 'What do you call a fake noodle? An impasta.', 'What do you call a belt made of watches? A waist of time.', 'Where do young trees go to learn? Elementree school.', 'Can February March? No, but April May!', 'When does a joke become a dad joke? When it becomes apparent.', 'Why are spiders so smart? They can find everything on the web.', 'What do you call a sad strawberry? A blueberry.', 'What runs around a baseball field but never moves? A fence.', 'Why did the coach go to the bank? To get his quarter back.', 'Which bear is the most condescending? A pan-duh!', 'Why was the robot so tired after his road trip? He had a hard drive.']
 
 # Constants
 EXAMPLE_COMMAND = 'do'
@@ -222,30 +226,21 @@ def handle_command(command, channel, ts, user):
     elif command == 'help':
         print('\n\n---> help\n')
         response = "*Available commands*\n\n"
-        response = response + "- `[ fresh | recent | yest | old ] inc`: SNow incidents opened [ today | last 7 days | yesterday | last 3 months ],\n"
-        response = response + "- `p1` or `p2`: List P1/P2 alerts currently active,\n"
         response = response + "- `bilbo`: Start the fabulous Bilbo interactive game,\n"
-        response = response + "- `snow switch prod` or `snow switch meng`: Switch between Prod & Meng ServiceNow,\n"
-        response = response + "- `show contacts`: Link to a list of contacts on the wiki,\n"
-        response = response + "- `snow check <INC>`: Determine if an INCident should be assigned to PENG Ops or not,\n"
-        response = response + "- `snow stats`: Show number of INC, REQ & CHG,\n"
-        response = response + "- `snow [ ignore | forget ] <INC>`: Set/Unset ignore flag on a ServiceNow INCident.\n"
+        response = response + "- `version`,\n"
+        response = response + "- `joke`,\n"
+        response = response + "- `debug`,\n"
+        response = response + "- `hello`,\n"
     elif command == 'bilbo':
         print('\n\n---> bilbo\n')
         initEventsTree(channel, 'bilbo', eventsList)
         response = eventsList[channel]['text']
-    elif command == 'show contacts':
-        print('\n\n---> show contacts\n')
-        response = '*MIM*: 1 300 000 000\n'
-        response = response + '*MUM*: 0123 456 789\n'
-        response = response + '*DAD*: 0123 456 789\n'
-        response = response + '*DOCTOR*: 0123 456 789\n'
-        response = response + '*PIZZA*: 0123 456 789\n'
-        response = response + '*GHOSTBUSTAZ*: 0123 456 789\n'
-        response = response + '\n> https://example.jira.com/wiki/spaces/DBMW/pages/0123456789/The+Big+What+To+Do+Page#TheBigWhatToDoPage-...Ineedtocontactadepartment/service'
-    elif 'Hello' in command:
-        print('\n\n---> Hello\n')
+    elif 'hi' in command:
         response = f'Hi <@{user}>!\n'
+    elif command == 'joke':
+        response = random.choice(dadJokes)
+    elif command == 'version':
+        response = 'Running Persona7 version ' + f'{version}'
 
     # Sends the response back to the channel
     return response or default_response
