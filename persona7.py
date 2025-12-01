@@ -31,7 +31,91 @@ app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 # starterbot's user ID in Slack: value is assigned after the bot starts up
 chatbotone_id = None
-eventsList = {}
+
+# Keeps track of ongoing conversation state for each user so multiple
+# conversations can progress in parallel without stepping on one another.
+user_conversations = {}
+
+# Template definitions for interactive conversation flows
+BILBO_EVENTS = {
+    'bilbo_start': {
+        'ts': 1550056556.000300,
+        'expires': 1550111111.000300,
+        'text': '*Welcome to Bilbo interactive game*\n\nStart new game ?\n- yes\n- no',
+        'option1': 'yes',
+        'action1': 'bilbo_yes',
+        'option2': 'no',
+        'action2': 'bilbo_no',
+        'option3': None,
+        'action3': None,
+        'url': None,
+        'eventId': 'bilbo_start',
+        'callFunction': None,
+        'step': 'ping',
+    },
+    'bilbo_yes': {
+        'ts': 0,
+        'expires': 0,
+        'text': '*Initializing a new game...*\nYou now are in a hobbit hole.\n- explore\n- leave',
+        'option1': 'explore',
+        'action1': 'bilbo_explore',
+        'option2': 'leave',
+        'action2': 'bilbo_leave',
+        'option3': None,
+        'action3': None,
+        'url': None,
+        'eventId': None,
+        'callFunction': None,
+        'step': 'ping',
+    },
+    'bilbo_no': {
+        'ts': 0,
+        'expires': 0,
+        'text': '*Goodbye, come again !*',
+        'option1': None,
+        'action1': None,
+        'option2': None,
+        'action2': None,
+        'option3': None,
+        'action3': None,
+        'url': None,
+        'eventId': None,
+        'callFunction': None,
+        'step': 'ping',
+    },
+    'bilbo_explore': {
+        'ts': 0,
+        'expires': 0,
+        'text': 'The inside of the hole is very clean. The wooden floor shines. The windows are round.\n- leave',
+        'option1': 'leave',
+        'action1': 'bilbo_leave',
+        'option2': None,
+        'action2': None,
+        'option3': None,
+        'action3': None,
+        'url': None,
+        'eventId': None,
+        'callFunction': None,
+        'step': 'ping',
+    },
+    'bilbo_leave': {
+        'ts': 0,
+        'expires': 0,
+        'text': 'The sky is cloudy and you feel a few drops falling on your arms and head.\n*This very short game ends here.*',
+        'option1': None,
+        'action1': None,
+        'option2': None,
+        'action2': None,
+        'option3': None,
+        'action3': None,
+        'url': None,
+        'eventId': None,
+        'callFunction': None,
+        'step': 'ping',
+    },
+}
+
+EVENT_TEMPLATES = {'bilbo': BILBO_EVENTS}
 
 # Variables
 dadJokes = ['What does a baby computer call his father? Data.', 'I only seem to get sick on weekdays. I must have a weekend immune system', 'Which days are the strongest? Saturday and Sunday. The rest are weekdays.', 'Have you heard about the restaurant on the moon? Great food, no atmosphere.', 'What did Yoda say when he saw himself in 4K? HDMI.', 'How many tickles does it take to make an octopus laugh? Ten tickles.', 'That car looks nice but the muffler seems exhausted.', 'I used to play piano by ear. Now I use my hands.', 'What did the vet say to the cat? How are you feline?', 'What do you call a fake noodle? An impasta.', 'What do you call a belt made of watches? A waist of time.', 'Where do young trees go to learn? Elementree school.', 'Can February March? No, but April May!', 'When does a joke become a dad joke? When it becomes apparent.', 'Why are spiders so smart? They can find everything on the web.', 'What do you call a sad strawberry? A blueberry.', 'What runs around a baseball field but never moves? A fence.', 'Why did the coach go to the bank? To get his quarter back.', 'Which bear is the most condescending? A pan-duh!', 'Why was the robot so tired after his road trip? He had a hard drive.']
@@ -134,21 +218,18 @@ def dynamodbListTableItems(databaseURL, tableName):
         pass
     return response
 
-def initEventsTree(userId, eventsTreeName, eventsList):
+def initEventsTree(userId, eventsTreeName):
     print(Fore.LIGHTGREEN_EX + 'initEventsTree')
-    print("initEventsTree: " + str(userId) + ", " + str(eventsTreeName) + ", " + str(eventsList))
-    if eventsTreeName == 'bilbo':
-        # Menu
-        eventsList[userId] = {'ts': 1550056556.000300, 'expires': 1550111111.000300, 'text': '*Welcome to Bilbo interactive game*\n\nStart new game ?\n- yes\n- no', 'option1': 'yes', 'action1': 'bilbo_yes', 'option2': 'no', 'action2': 'bilbo_no', 'option3': None, 'action3': None, 'url': None, 'eventId': 'bilbo_start', 'callFunction': None, 'step': 'ping'}
-        # bilbo_yes
-        eventsList['bilbo_yes'] = {'ts': 0, 'expires': 0, 'text': '*Initializing a new game...*\nYou now are in a hobbit hole.\n- explore\n- leave', 'option1': 'explore', 'action1': 'bilbo_explore', 'option2': 'leave', 'action2': 'bilbo_leave', 'option3': None, 'action3': None, 'url': None, 'eventId': None, 'callFunction': None, 'step': 'ping'}
-        # bilbo_no
-        eventsList['bilbo_no'] = {'ts': 0, 'expires': 0, 'text': '*Goodbye, come again !*', 'option1': None, 'action1': None, 'option2': None, 'action2': None, 'option3': None, 'action3': None, 'url': None, 'eventId': None, 'callFunction': None, 'step': 'ping'}
-        # bilbo_explore
-        eventsList['bilbo_explore'] = {'ts': 0, 'expires': 0, 'text': 'The inside of the hole is very clean. The wooden floor shines. The windows are round.\n- leave', 'option1': 'leave', 'action1': 'bilbo_leave', 'option2': None, 'action2': None, 'option3': None, 'action3': None, 'url': None, 'eventId': None, 'callFunction': None, 'step': 'ping'}
-        # bilbo_leave
-        eventsList['bilbo_leave'] = {'ts': 0, 'expires': 0, 'text': 'The sky is cloudy and you feel a few drops falling on your arms and head.\n*This very short game ends here.*', 'option1': None, 'action1': None, 'option2': None, 'action2': None, 'option3': None, 'action3': None, 'url': None, 'eventId': None, 'callFunction': None, 'step': 'ping'}
-    return eventsList
+    print("initEventsTree: " + str(userId) + ", " + str(eventsTreeName))
+
+    if eventsTreeName not in EVENT_TEMPLATES:
+        raise ValueError(f"Unknown events tree: {eventsTreeName}")
+
+    user_conversations[userId] = {
+        'current_event': 'bilbo_start',
+        'tree': eventsTreeName,
+    }
+    return user_conversations[userId]
 
 def writeDataToFile(targetFile, dataToWrite, successMsg, failureMsg, mode):
     print(Fore.LIGHTGREEN_EX + 'writeDataToFile')
@@ -186,38 +267,48 @@ def handle_command(command, channel, ts, user):
     writeDataToFile(f'{cb1DataFolder}{user}/commands.log', f'User entered command: {command}', 'Event log - OK', 'Event log - KO', 'append')
 
     # Check if we are waiting for a specific answer from user
-    for key in eventsList:
-        # If this is the case, change Step to pong...
-        if str(key) == str(channel):
-            print('We have some business to do...')
-            print('ts: ' + str(eventsList[key]['ts']))
-            print('expires: ' + str(eventsList[key]['expires']))
-            print('text: ' + str(eventsList[key]['text']))
-            print('o1: ' + str(eventsList[key]['option1']))
-            print('a1: ' + str(eventsList[key]['action1']))
-            print('o2: ' + str(eventsList[key]['option2']))
-            print('a2: ' + str(eventsList[key]['action2']))
-            print('o3: ' + str(eventsList[key]['option3']))
-            print('a3: ' + str(eventsList[key]['action3']))
-            print('url: ' + str(eventsList[key]['url']))
-            print('eventId: ' + str(eventsList[key]['eventId']))
-            print('callFunction: ' + str(eventsList[key]['callFunction']))
-            print('step: ' + eventsList[key]['step'])
-            eventsList[key]['step'] = 'pong'
-            print('step: ' + eventsList[key]['step'])
-            # ...then perform the required action
-            if command == str(eventsList[key]['option1']):
-                response = str(eventsList[eventsList[key]['action1']]['text'])
-                eventsList[channel] = {'ts': 0, 'expires': 0, 'text': eventsList[eventsList[key]['action1']]['text'], 'option1': eventsList[eventsList[key]['action1']]['option1'], 'action1': eventsList[eventsList[key]['action1']]['action1'], 'option2': eventsList[eventsList[key]['action1']]['option2'], 'action2': eventsList[eventsList[key]['action1']]['action2'], 'option3': eventsList[eventsList[key]['action1']]['option3'], 'action3': eventsList[eventsList[key]['action1']]['action3'], 'url': eventsList[eventsList[key]['action1']]['url'], 'eventId': eventsList[eventsList[key]['action1']]['eventId'], 'callFunction': eventsList[eventsList[key]['action1']]['callFunction'], 'step': 'ping'}
-                print('New event: ' + str(eventsList[channel]))
-            elif command == str(eventsList[key]['option2']):
-                response = str(eventsList[eventsList[key]['action2']]['text'])
-                eventsList[channel] = {'ts': 0, 'expires': 0, 'text': eventsList[eventsList[key]['action2']]['text'], 'option1': eventsList[eventsList[key]['action2']]['option1'], 'action1': eventsList[eventsList[key]['action2']]['action1'], 'option2': eventsList[eventsList[key]['action2']]['option2'], 'action2': eventsList[eventsList[key]['action2']]['action2'], 'option3': eventsList[eventsList[key]['action2']]['option3'], 'action3': eventsList[eventsList[key]['action2']]['action3'], 'url': eventsList[eventsList[key]['action2']]['url'], 'eventId': eventsList[eventsList[key]['action2']]['eventId'], 'callFunction': eventsList[eventsList[key]['action2']]['callFunction'], 'step': 'ping'}
-                print('New event: ' + str(eventsList[channel]))
-            elif command == str(eventsList[key]['option3']):
-                response = str(eventsList[eventsList[key]['action3']]['text'])
-                eventsList[channel] = {'ts': 0, 'expires': 0, 'text': eventsList[eventsList[key]['action3']]['text'], 'option1': eventsList[eventsList[key]['action3']]['option1'], 'action1': eventsList[eventsList[key]['action3']]['action1'], 'option2': eventsList[eventsList[key]['action3']]['option2'], 'action2': eventsList[eventsList[key]['action3']]['action2'], 'option3': eventsList[eventsList[key]['action3']]['option3'], 'action3': eventsList[eventsList[key]['action3']]['action3'], 'url': eventsList[eventsList[key]['action3']]['url'], 'eventId': eventsList[eventsList[key]['action3']]['eventId'], 'callFunction': eventsList[eventsList[key]['action3']]['callFunction'], 'step': 'ping'}
-                print('New event: ' + str(eventsList[channel]))
+    current_conversation = user_conversations.get(user)
+    if current_conversation:
+        tree_name = current_conversation['tree']
+        tree = EVENT_TEMPLATES.get(tree_name, {})
+        current_event = current_conversation['current_event']
+        event_details = tree.get(current_event, {})
+        print('We have some business to do...')
+        print('ts: ' + str(event_details.get('ts')))
+        print('expires: ' + str(event_details.get('expires')))
+        print('text: ' + str(event_details.get('text')))
+        print('o1: ' + str(event_details.get('option1')))
+        print('a1: ' + str(event_details.get('action1')))
+        print('o2: ' + str(event_details.get('option2')))
+        print('a2: ' + str(event_details.get('action2')))
+        print('o3: ' + str(event_details.get('option3')))
+        print('a3: ' + str(event_details.get('action3')))
+        print('url: ' + str(event_details.get('url')))
+        print('eventId: ' + str(event_details.get('eventId')))
+        print('callFunction: ' + str(event_details.get('callFunction')))
+        print('step: ' + str(event_details.get('step')))
+
+        options_actions = [
+            (event_details.get('option1'), event_details.get('action1')),
+            (event_details.get('option2'), event_details.get('action2')),
+            (event_details.get('option3'), event_details.get('action3')),
+        ]
+
+        for option, action in options_actions:
+            if option is not None and command == str(option):
+                if action in tree:
+                    next_event = tree[action]
+                    user_conversations[user]['current_event'] = action
+                    response = str(next_event.get('text'))
+                    print('New event: ' + str(next_event))
+                else:
+                    response = default_response
+                break
+
+        # If no further actions are available, end the conversation
+        if all(action is None for _, action in options_actions):
+            print(f"Conversation with {user} concluded. Clearing state.")
+            user_conversations.pop(user, None)
 
     # This is where you start to implement more commands!
     print(f'Command: {command}')
@@ -233,8 +324,9 @@ def handle_command(command, channel, ts, user):
         response = response + "- `hello`,\n"
     elif command == 'bilbo':
         print('\n\n---> bilbo\n')
-        initEventsTree(channel, 'bilbo', eventsList)
-        response = eventsList[channel]['text']
+        conversation_state = initEventsTree(user, 'bilbo')
+        start_event = EVENT_TEMPLATES['bilbo'][conversation_state['current_event']]
+        response = start_event['text']
     elif 'hi' in command:
         response = f'Hi <@{user}>!\n'
     elif command == 'joke':
